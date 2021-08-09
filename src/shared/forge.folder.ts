@@ -15,24 +15,13 @@ export type X = {
   prjectDetails: ProjectInfo;
 };
 
-export type Abed = {
-  urnFolder: string;
-  folderName: string;
-  projectSourceFolder: {
-    id: string;
-    name: string;
-    rootFolderId: string;
-  };
-};
-
-export type Abeds = Abed[];
-
-export const folderApi = async () => {
+export const folderApi = async (projectDetailes) => {
   let projectFiles: X[] = [];
 
-  const hubId = await hub();
   const credentials = await oAuth2();
-  const projectDetailes = await projects();
+  const hubId = await hub(credentials);
+
+
   const folders = new ForgeSDK.ProjectsApi();
 
   for (let i = 0; i < projectDetailes.length; i++) {
@@ -53,6 +42,7 @@ export const folderApi = async () => {
           return false;
         }
       });
+
       projectFiles.push({ allProjectFiles, prjectDetails });
     } catch (error) {
       console.log(error.message);
@@ -60,13 +50,12 @@ export const folderApi = async () => {
   }
 
   const allProjectFiles = projectFiles.map((urns) => {
-    const projectSourceFolder = urns.prjectDetails;
-
     const folderUrnId = urns.allProjectFiles.map((folder) => {
       return {
+        projectId: urns.prjectDetails.id,
+        projectName: urns.prjectDetails.name,
         urnFolder: folder.id,
         folderName: folder.attributes.displayName,
-        projectSourceFolder,
       };
     });
     return folderUrnId;

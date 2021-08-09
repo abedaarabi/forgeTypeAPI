@@ -1,102 +1,119 @@
 import * as ForgeSDK from 'forge-apis';
 import { oAuth2 } from './forge.oAuth2';
-import { folderApi, Abed } from './forge.folder';
+import { folderApi } from './forge.folder';
+import { ItemContent, ItemContents } from '../interfaces/interface.item';
+import { FolderContent, FolderContents } from '../interfaces/interface.folder';
+import { flatten } from '../shared/array.helper';
+import { TypeProjectDetail } from 'src/interfaces/interface.project';
+import { projects } from './forge.projects';
+import { hub } from './forge.hub';
 
-import { flatten } from './array.helper';
-
-//located in the incloude
-interface ItemContent {
-  type: string;
-  id: string;
-  attributes: {
-    name: string;
-    displayName: string;
-    createTime: Date;
-    createUserId: string;
-    createUserName: string;
-    lastModifiedTime: Date;
-    lastModifiedUserId: string;
-    lastModifiedUserName: string;
-    versionNumber: number;
-    mimeType: string;
-    storageSize: number;
-    fileType: string;
-    extension: { data: { originalItemUrn: string } };
-    relationships: {
-      derivatives: { data: { id: string } };
-      storage: { meta: { link: { href: string } } };
-    };
-  };
-}
-//located in the incloude
-interface FolderContent {
-  type: string;
-  id: string;
-  attributes: {
-    name: string;
-    displayName: string;
-    createTime: Date;
-    createUserID: string;
-    createUserName: string;
-    lastModifiedTime: Date;
-    lastModifiedUserID: string;
-    lastModifiedUserName: string;
-    lastModifiedTimeRollup: Date;
-    objectCount: number;
-    hidden: boolean;
-  };
-}
-export interface ArrayType {
+export interface ObjType {
   folderData: FolderContents;
   folderIncluded: ItemContents;
-  projectDetails: Abed;
+  projectDetails: TypeProjectDetail;
 }
 
-export interface FolderContents extends Array<FolderContent> {}
-export interface ItemContents extends Array<ItemContent> {}
-
-export const folderContent = async () => {
-  const arrFolderContent: ArrayType[] = [];
+export const folderContent = async (projectId: string, folderId: string) => {
+  let allIncloudedArray: any[] = [];
   const credentials = await oAuth2();
-  const projectFiles = await folderApi();
-  const folders = new ForgeSDK.FoldersApi();
+  const folder = new ForgeSDK.FoldersApi();
 
-  for (let i = 0; i < projectFiles.length; i++) {
-    const projectDetails = projectFiles[i];
+  const allFolder = await folder.getFolderContents(
+    projectId,
+    folderId,
+    null,
+    null,
+    credentials,
+  );
 
-    console.log(projectDetails.projectSourceFolder.id);
+  let testArray: any = [];
+  const folderContentt = allFolder.body as FolderContents;
 
-    const allFolderContents = await folders.getFolderContents(
-      projectDetails.projectSourceFolder.id,
-      projectDetails.urnFolder,
-      undefined,
-      undefined,
-      credentials,
-    );
+  testArray.push(folderContentt);
 
-    const folderData = allFolderContents.body.data as FolderContents;
-    const folderIncluded = allFolderContents.body.included as ItemContents;
+  await Promise.all(
+    testArray.map(async (element) => {
+      if (element.included) {
+        allIncloudedArray.push(element.included);
+      }
 
-    arrFolderContent.push({ folderData, folderIncluded, projectDetails });
-  }
+      return await Promise.all(
+        element.data.map(async (folder) => {
+          if (folder.type === 'folders') {
+            const recursive = await folderContent(projectId, folder.id);
+            allIncloudedArray = allIncloudedArray.concat(recursive);
+            return allIncloudedArray;
+          }
+        }),
+      );
+    }),
+  ).catch((err) => {
+    err;
+  });
 
-  const folderDetails = arrFolderContent.map((i) => {
-    return i.folderData.map((folder) => {
-      return {
-        folderId: folder.id,
-        type: folder.type,
-        folderName: folder.attributes.displayName,
-        createUserName: folder.attributes.createUserName,
-        lastModifiedUserName: folder.attributes.lastModifiedUserName,
-        createTime: folder.attributes.createTime,
-        lastModifiedTime: folder.attributes.lastModifiedTime,
-        hidden: folder.attributes.hidden,
-        ...i.projectDetails,
-      };
+  return allIncloudedArray;
+};
+
+export const test = async () => {
+  let rr: any[] = [];
+  const credentials = await oAuth2();
+  const hubs = await hub(credentials);
+  const allProjects = await projects(hubs);
+  const allfolders = await Promise.all(
+    allProjects.map(async (item) => {
+      const projectId = item.id;
+      const projectName = item.name;
+      const folderId = item.rootFolderId;
+      const items = await folderContent(projectId, folderId);
+      return { items, projectId, projectName };
+    }),
+  ).catch((err) => {
+    err;
+  });
+  const boo = allfolders as any;
+
+  boo.forEach((i) => {
+    const flat = flatten(i.items);
+
+    flat.forEach((incloude: any) => {
+      const downloadItems =
+        incloude.relationships.storage.meta.link.href.split('?')[0];
+
+      const items = rr.filter((item) => {
+        if (item.fileName === incloude.attributes.displayName) {
+          return true;
+        } else {
+          return false;
+        }
+      });
+
+      const isFound = Boolean(items[0]);
+      // && incloude.attributes.fileType === 'rvt'
+      if (!isFound && incloude.attributes.fileType === 'rvt') {
+        rr.push({
+          projectName: i.projectName,
+          projectId: i.projectId,
+          versionId: incloude.id,
+          versionType: incloude.type,
+          derivativesId: incloude.relationships.derivatives.data.id,
+          createUserName: incloude.attributes.createUserName,
+          fileType: incloude.attributes.fileType,
+          createTime: incloude.attributes.createTime,
+          lastModifiedTime: incloude.attributes.lastModifiedTime,
+          lastModifiedUserName: incloude.attributes.lastModifiedUserName,
+          storageSize: incloude.attributes.storageSize,
+          fileName: incloude.attributes.displayName,
+          extension: incloude.attributes.extension.type,
+          originalItemUrn: incloude.attributes.extension.data.originalItemUrn,
+          projectGuid: incloude.attributes.extension.data.projectGuid,
+          downloadItem: downloadItems,
+        });
+      } else {
+        console.log(`Ignore ${incloude.attributes.displayName}`);
+      }
     });
   });
-  const fal = flatten(folderDetails);
-  console.log(fal);
 
-  return arrFolderContent;
+  return rr;
 };

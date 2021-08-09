@@ -17,9 +17,9 @@ export type ProjectInfo = {
 export type Projects = Array<Project>;
 
 //this Function will return Project {id, name, rootFolderId}
-export const projects = async () => {
+export const projects = async (hubId) => {
   const credentials = await oAuth2();
-  const hubId = await hub();
+
   const Project = new ForgeSDK.ProjectsApi();
 
   const allProjects = await Project.getHubProjects(
@@ -31,8 +31,8 @@ export const projects = async () => {
   const bim360Projects = allProjects.body.data as Projects;
 
   const neededProjects = [
-    'b.12469613-6f90-42c3-b49c-4bb22e440e30',
-    'b.c74e65d3-cb3f-4863-9378-479ce0d4f995',
+    // 'b.12469613-6f90-42c3-b49c-4bb22e440e30',
+    // 'b.c74e65d3-cb3f-4863-9378-479ce0d4f995',
     'b.79a6bff3-34b1-435f-8964-282f78ae1ef5', //*
   ];
 
@@ -60,3 +60,5 @@ export const projects = async () => {
 
   return oldId;
 };
+
+export function repeat() {}

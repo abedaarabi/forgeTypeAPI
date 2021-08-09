@@ -1,15 +1,16 @@
 import { Controller, Get } from '@nestjs/common';
 
 import { AppService } from './app.service';
-import { folderApi, RootFolder, Abeds } from './shared/forge.folder';
-import { ArrayType } from './shared/forge.topFolderContent';
+
+import { FolderContent } from './interfaces/interface.folder';
+import { TypeProjectDetails } from './interfaces/interface.project';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): Promise<ArrayType[]> {
+  getHello(): Promise<FolderContent[] | TypeProjectDetails[]> {
     return this.appService.getHello();
   }
 }
