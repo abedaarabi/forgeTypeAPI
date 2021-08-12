@@ -19,10 +19,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
-   
-
-
-
   },
   "dependencies": {
     "@nestjs/common": "^7.6.15",
@@ -32,6 +28,7 @@
     "@types/forge-apis": "^0.8.0",
     "dotenv": "^10.0.0",
     "forge-apis": "^0.8.6",
+    "node-fetch": "^2.6.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.6"
