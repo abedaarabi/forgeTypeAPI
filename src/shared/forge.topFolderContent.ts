@@ -1,7 +1,7 @@
 import * as ForgeSDK from 'forge-apis';
 import { oAuth2 } from './forge.oAuth2';
 import { folderApi } from './forge.folder';
-import { ItemContent, ItemContents, Item } from '../interfaces/interface.item';
+import { ItemContent, ItemContents } from '../interfaces/interface.item';
 import { FolderContent, FolderContents } from '../interfaces/interface.folder';
 import { flatten } from '../shared/array.helper';
 import { TypeProjectDetail } from 'src/interfaces/interface.project';
@@ -42,7 +42,7 @@ export const folderContent = async (projectId: string, folderId: string) => {
       for await (const folder of element.data) {
         if (folder.type === 'folders') {
           const recursive = await folderContent(projectId, folder.id);
-          console.log(folder.id);
+          // console.log(folder.id);
 
           allIncloudedArray = allIncloudedArray.concat(recursive);
         }
@@ -54,5 +54,3 @@ export const folderContent = async (projectId: string, folderId: string) => {
 
   return allIncloudedArray;
 };
-
-

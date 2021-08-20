@@ -1,16 +1,10 @@
 import * as ForgeSDK from 'forge-apis';
 import { oAuth2 } from '../shared/forge.oAuth2';
-import { Item } from '../interfaces/interface.item';
+import { delay } from '../shared/array.helper';
+import { ItemDetails } from '../interfaces/interface.item';
 import { items } from '../shared/forge.items';
 
-interface GuId {
-  guidContent: Item;
-  name: string;
-  role: string;
-  guid: string;
-}
-let arr: GuId[] = [];
-
+let arr: ItemDetails[] = [];
 
 export const metadata = async () => {
   const guid = new ForgeSDK.DerivativesApi();
@@ -39,10 +33,11 @@ export const metadata = async () => {
             'waitin for translation to finish: ',
             guidContent.fileName,
           );
+          await delay(10 * 1000);
           continue;
         } else if (
-          transalteProsses.body.progress === 'complete' &&
-          transalteProsses.body.status != 'failed'
+          transalteProsses.body.progress === 'complete'
+          // transalteProsses.body.status != 'failed'
         ) {
           const metaData = await guid.getMetadata(
             guidContent.derivativesId,
@@ -51,14 +46,20 @@ export const metadata = async () => {
             credentials,
           );
           console.log('Translate progress complete: ', guidContent.fileName);
-          const uu = metaData.body.data.metadata as GuId[];
+          const uu = metaData.body.data.metadata as ItemDetails[];
           const roleInfo = uu.find((item) => {
             if (item.role === '3d' && item.name === 'New Construction') {
               return true;
             }
           });
 
-          arr.push({ ...guidContent, ...roleInfo });
+          //push all items that finish translation(but status could be failed)
+          arr.push({
+            ...guidContent,
+            ...roleInfo,
+            translateStatus: transalteProsses.body.status,
+            translateProgress: transalteProsses.body.progress,
+          });
           break;
         }
       } catch (error) {
