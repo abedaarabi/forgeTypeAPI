@@ -1,16 +1,19 @@
 import { oAuth2 } from '../shared/forge.oAuth2';
 import axios from 'axios';
 
-export async function publishModel(projectId: string, urnId: string, tt: any) {
+export async function publishModel(
+  projectId: string,
+  urnId: string,
+  shouldPublish: boolean,
+) {
   const credentials = await oAuth2();
 
-  const verifyPublishing = 'C4RModelGetPublishJob';
-  const orderPublishing = 'C4RModelPublish';
+  let publishType;
 
-  if (!tt) {
-    tt = verifyPublishing;
+  if (!shouldPublish) {
+    publishType = 'C4RModelGetPublishJob';
   } else {
-    tt = orderPublishing;
+    publishType = 'C4RModelPublish';
   }
 
   const url = `https://developer.api.autodesk.com/data/v1/projects/${projectId}/commands`;
@@ -30,7 +33,7 @@ export async function publishModel(projectId: string, urnId: string, tt: any) {
         type: 'commands',
         attributes: {
           extension: {
-            type: `commands:autodesk.bim360:${tt}`, //C4RModelGetPublishJob
+            type: `commands:autodesk.bim360:${publishType}`, //C4RModelGetPublishJob
             version: '1.0.0',
           },
         },

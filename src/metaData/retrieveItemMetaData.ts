@@ -17,18 +17,17 @@ export const propertiesMetadata = async () => {
   const guid = new ForgeSDK.DerivativesApi();
   const allItemsMetaData = await metadata();
 
-  const hasGuId = allItemsMetaData
-    .filter((item) => {
-      if (
-        item.fileName.includes('K07') ||
+  const hasGuId = allItemsMetaData.filter((item) => {
+    if (
+      item.guid &&
+      (item.fileName.includes('K07') ||
         item.fileName.includes('K08') ||
         item.fileName.includes('K09') ||
-        item.fileName.includes('K10')
-      ) {
-        return true;
-      } else return false;
-    })
-    .filter((item) => item.guid);
+        item.fileName.includes('K10'))
+    ) {
+      return true;
+    } else return false;
+  });
 
   const credentials = await oAuth2();
 
@@ -79,14 +78,14 @@ export const propertiesMetadata = async () => {
 
   for await (const property of arr) {
     //detailes from Item
-    const id = property.itemMetaData.versionId as string
-    const projectId = property.itemMetaData.projectId as string
-    const projectName = property.itemMetaData.projectName as string
-    const originalItemUrn = property.itemMetaData.originalItemUrn as string
-    const name = property.itemMetaData.fileName as string
-    const elementsCount = property.hasTypeName.length as string
-    const date = property.itemMetaData.lastModifiedTime as string
-    const modiId = id.split('?')[0] as string
+    const id = property.itemMetaData.versionId as string;
+    const projectId = property.itemMetaData.projectId as string;
+    const projectName = property.itemMetaData.projectName as string;
+    const originalItemUrn = property.itemMetaData.originalItemUrn as string;
+    const name = property.itemMetaData.fileName as string;
+    const elementsCount = property.hasTypeName.length as string;
+    const date = property.itemMetaData.lastModifiedTime as string;
+    const modiId = id.split('?')[0] as string;
 
     const deleteId = await deleteObjId(modiId);
     const insertItems = await insdertItems({

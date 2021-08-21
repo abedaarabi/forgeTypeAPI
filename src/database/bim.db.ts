@@ -1,7 +1,8 @@
 require('dotenv').config({ path: './.env' });
+import { Logger } from '@nestjs/common';
 
-const sql = require('mssql');
-// import sql from 'mssql';
+// const sql = require('mssql');
+import * as sql from 'mssql';
 
 const con = {
   user: process.env.DB_USER,
@@ -22,15 +23,17 @@ const con = {
 export const connect = async () => {
   try {
     const pool = await sql.connect(con);
-
-    console.log(`Connecting to database ${pool.config.user}`);
+    //@ts-ignore
+    console.log(`Connecting to database: `, pool.config.user);
   } catch (err) {
     console.log(`Error ${err.message}`);
   }
 };
 
 //Delete Elements
-export const deleteObjId = async (modiId: string): Promise<any> => {
+export const deleteObjId = async (
+  modiId: string,
+): Promise<sql.IResult<any>> => {
   return new Promise((resolve) => {
     console.log('delete element with id: ', modiId);
     const rr = sql.query(
@@ -41,7 +44,7 @@ export const deleteObjId = async (modiId: string): Promise<any> => {
   });
 };
 
-interface ProjectArray {
+interface Project {
   id: string;
   name: string;
 }
@@ -56,27 +59,33 @@ interface ItemType {
 }
 
 //Insert projects
-export const insertProjects = async (
-  allProjects: ProjectArray[],
-): Promise<any> => {
-  let pool = await sql.connect(con);
-  const projects = allProjects.map(async (project): Promise<number[]> => {
-    try {
-      let result1 = await pool
-        .request()
-        .input('id', sql.VarChar(255), project.id)
-        .input('name', sql.VarChar(255), project.name)
-        .query(
-          `INSERT INTO project_name (projectID, projectName) VALUES (@id, @name)`,
-        );
-      console.log(result1.rowsAffected);
 
-      return result1.rowsAffected;
-    } catch (error) {
-      console.log(error.message);
-      return error.message;
-    }
-  });
+export const insertProjects = async (
+  allProjects: Project[],
+): Promise<number[][]> => {
+  let pool = await sql.connect(con);
+  const projects = allProjects.map(
+    async (project): Promise<number[] | undefined> => {
+      try {
+        let result1 = await pool
+          .request()
+          .input('id', sql.VarChar(255), project.id)
+          .input('name', sql.VarChar(255), project.name)
+          .query(
+            `INSERT INTO project_name (projectID, projectName) VALUES (@id, @name)`,
+          );
+        Logger.warn(
+          'inserted projects',
+          `rowsAffected: ${result1.rowsAffected}`,
+        );
+
+        return result1.rowsAffected;
+      } catch (error) {
+        Logger.error('inserted projects error', error);
+      }
+    },
+  );
+  return await Promise.all(projects);
 };
 
 //Insert Items
@@ -102,12 +111,11 @@ export const insdertItems = async ({
       .query(
         `INSERT INTO item_name (date, elementsCount, id, name, projectId, originalItemUrn) VALUES (@data, @elementsCount, @id, @name, @projectId, @originalItemUrn)`,
       );
-    console.log(result1);
+    Logger.warn('inserted items', `rowsAffected: ${result1.rowsAffected}`);
 
     return result1;
   } catch (error) {
-    console.log(error.message);
-    return error.message;
+    Logger.error('inserted items error', error);
   }
 };
 
@@ -159,8 +167,10 @@ export const insterElements = async (rr) => {
   let result;
   try {
     result = await request.bulk(tableElt);
-    console.log(result);
+
+    Logger.log('inserted elements', `rowsAffected: ${result.rowsAffected}`);
+    // console.log(result);
   } catch (error) {
-    console.log('table element error', error.message);
+    Logger.error('inserted elements error', error);
   }
 };
