@@ -33,13 +33,13 @@ export const connect = async () => {
 //Delete Elements
 export const deleteObjId = async (
   modiId: string,
-): Promise<sql.IResult<any>> => {
+): Promise<sql.IResult<unknown>> => {
   return new Promise((resolve) => {
     console.log('delete element with id: ', modiId);
-    const rr = sql.query(
+    const deleteElements = sql.query(
       `DELETE FROM element WHERE element.objectId LIKE '%${modiId}%'`,
-    );
-    resolve(rr);
+    )
+    resolve(deleteElements);
     console.log('Done');
   });
 };
@@ -174,3 +174,31 @@ export const insterElements = async (rr) => {
     Logger.error('inserted elements error', error);
   }
 };
+
+/*********
+ *
+ * selectWorkSet(){
+ * select ... from....
+ * }
+ *
+ * const resultV1 = selectWorkSet()
+ * const resultV2 = selectWorkSet()
+ *
+ * {
+ * B1vId: 'v1',
+ * B2vId: 'v2',
+ * pram:"workSet"
+ * }
+ *
+ * Route
+ * r1=selectWorkSet(v1, workSet)
+ * r2=selectWorkSet(v2, workSet)
+ *
+ * r1 =[....]
+ * r2=[.....]
+ *
+ * result= compare (r1  vs r2)
+ *
+ *
+ *
+ */
