@@ -13,6 +13,7 @@ import {
 import { projects } from 'src/shared/forge.projects';
 import { hub } from 'src/shared/forge.hub';
 import { Logger } from '@nestjs/common';
+import { publishCloudWorkshared } from 'src/publishModel/publishCloudWorkshared';
 
 export type ElementProperties = {
   name: string;
@@ -35,6 +36,8 @@ export type ElementProperties = {
 };
 
 export const propertiesMetadata = async () => {
+  await publishCloudWorkshared();
+
   let arr = [];
   const guid = new ForgeSDK.DerivativesApi();
   const allItemsMetaData = await metadata();
