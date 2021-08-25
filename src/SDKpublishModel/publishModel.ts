@@ -1,5 +1,11 @@
 import { oAuth2 } from '../shared/forge.oAuth2';
 import axios from 'axios';
+import { Logger } from '@nestjs/common';
+
+//200703030286415 Jesper
+//4RL5NPRJ3LNM bimadmin
+//G37HRH22DWBV Abed
+//A4CZNLQVA864 Anita
 
 export async function publishModel(
   projectId: string,
@@ -13,7 +19,7 @@ export async function publishModel(
   if (!shouldPublish) {
     publishType = 'C4RModelGetPublishJob';
   } else {
-    publishType = 'C4RModelPublish';
+    publishType = '4RL5NPRJ3LNM';
   }
 
   const url = `https://developer.api.autodesk.com/data/v1/projects/${projectId}/commands`;
@@ -23,7 +29,7 @@ export async function publishModel(
     headers: {
       'content-type': 'application/vnd.api+json',
       Authorization: `Bearer ${credentials.access_token}`,
-      'x-user-id': '4RL5NPRJ3LNM',
+      'x-user-id': 'G37HRH22DWBV',
     },
     data: JSON.stringify({
       jsonapi: {
@@ -50,6 +56,6 @@ export async function publishModel(
       },
     }),
   });
-  console.log(response.data);
+  Logger.log('translate prosses: ', response.data);
   return response.data;
 }

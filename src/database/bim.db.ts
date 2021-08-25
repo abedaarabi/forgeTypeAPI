@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 
 // const sql = require('mssql');
 import * as sql from 'mssql';
+import { ElementProperties } from 'src/metaData/retrieveItemMetaData';
 
 const con = {
   user: process.env.DB_USER,
@@ -24,9 +25,9 @@ export const connect = async () => {
   try {
     const pool = await sql.connect(con);
     //@ts-ignore
-    console.log(`Connecting to database: `, pool.config.user);
+    Logger.debug(`Connecting to database: `, pool.config.user);
   } catch (err) {
-    console.log(`Error ${err.message}`);
+    Logger.error(`Error ${err.message}`);
   }
 };
 
@@ -35,12 +36,12 @@ export const deleteObjId = async (
   modiId: string,
 ): Promise<sql.IResult<unknown>> => {
   return new Promise((resolve) => {
-    console.log('delete element with id: ', modiId);
+    Logger.warn('delete element with id: ', modiId);
     const deleteElements = sql.query(
       `DELETE FROM element WHERE element.objectId LIKE '%${modiId}%'`,
-    )
+    );
     resolve(deleteElements);
-    console.log('Done');
+    Logger.log('Done');
   });
 };
 
@@ -64,27 +65,27 @@ export const insertProjects = async (
   allProjects: Project[],
 ): Promise<number[][]> => {
   let pool = await sql.connect(con);
-  const projects = allProjects.map(
-    async (project): Promise<number[] | undefined> => {
-      try {
-        let result1 = await pool
-          .request()
-          .input('id', sql.VarChar(255), project.id)
-          .input('name', sql.VarChar(255), project.name)
-          .query(
-            `INSERT INTO project_name (projectID, projectName) VALUES (@id, @name)`,
-          );
-        Logger.warn(
+  const projects = allProjects.map(async (project): Promise<number[]> => {
+    try {
+      let result1 = await pool
+        .request()
+        .input('id', sql.VarChar(255), project.id)
+        .input('name', sql.VarChar(255), project.name)
+        .query(
+          `INSERT INTO project_name (projectID, projectName) VALUES (@id, @name)`,
+        );
+
+      if (result1) {
+        Logger.log(
           'inserted projects',
           `rowsAffected: ${result1.rowsAffected}`,
         );
-
         return result1.rowsAffected;
-      } catch (error) {
-        Logger.error('inserted projects error', error);
       }
-    },
-  );
+    } catch (error) {
+      Logger.error('inserted projects error', error);
+    }
+  });
   return await Promise.all(projects);
 };
 
@@ -96,7 +97,7 @@ export const insdertItems = async ({
   name,
   elementsCount,
   date,
-}: ItemType) => {
+}: ItemType): Promise<number[]> => {
   let pool = await sql.connect(con);
 
   try {
@@ -111,21 +112,26 @@ export const insdertItems = async ({
       .query(
         `INSERT INTO item_name (date, elementsCount, id, name, projectId, originalItemUrn) VALUES (@data, @elementsCount, @id, @name, @projectId, @originalItemUrn)`,
       );
-    Logger.warn('inserted items', `rowsAffected: ${result1.rowsAffected}`);
 
-    return result1;
+    if (result1) {
+      Logger.log('inserted items', `rowsAffected: ${result1.rowsAffected}`);
+      return result1.rowsAffected;
+    }
   } catch (error) {
-    Logger.error('inserted items error', error);
+    Logger.error('inserted items error', error.message);
   }
 };
 
 //Insert Elements
-export const insterElements = async (rr) => {
+export const insterElements = async (
+  array: ElementProperties[],
+): Promise<number> => {
   const request = new sql.Request();
   let tableElt = new sql.Table('element');
   // tableElt.create = true;
   tableElt.columns.add('name', sql.VarChar(255));
   tableElt.columns.add('dbId', sql.VarChar(255));
+  tableElt.columns.add('version_id', sql.VarChar(255));
   tableElt.columns.add('TypeName', sql.VarChar(255));
   tableElt.columns.add('Type_Sorting', sql.VarChar(255));
   tableElt.columns.add('Workset', sql.VarChar(255));
@@ -143,10 +149,11 @@ export const insterElements = async (rr) => {
   tableElt.columns.add('BIM7AATypeCode', sql.VarChar(255));
   tableElt.columns.add('BIM7AATypeComments', sql.VarChar(255));
 
-  rr.map((element) => {
+  array.map((element) => {
     tableElt.rows.add(
       element.name,
       element.dbId,
+      element.version_id,
       element.TypeName,
       element.Type_Sorting,
       element.Workset,
@@ -164,12 +171,10 @@ export const insterElements = async (rr) => {
     );
   });
 
-  let result;
   try {
-    result = await request.bulk(tableElt);
-
+    const result = await request.bulk(tableElt);
     Logger.log('inserted elements', `rowsAffected: ${result.rowsAffected}`);
-    // console.log(result);
+    return result.rowsAffected;
   } catch (error) {
     Logger.error('inserted elements error', error);
   }

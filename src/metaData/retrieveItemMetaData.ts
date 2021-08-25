@@ -12,6 +12,28 @@ import {
 } from '../database/bim.db';
 import { projects } from 'src/shared/forge.projects';
 import { hub } from 'src/shared/forge.hub';
+import { Logger } from '@nestjs/common';
+
+export type ElementProperties = {
+  name: string;
+  dbId: number;
+  version_id: number;
+  externalId: string;
+  TypeName: string;
+  objectId: string;
+  Workset: string;
+  Type_Sorting: string;
+  CCSTypeID: string;
+  CCSTypeID_Type: string;
+  CCSClassCode_Type: string;
+  BIM7AATypeName: string;
+  BIM7AATypeDescription: string;
+  BIM7AATypeID: string;
+  BIM7AATypeNumber: string;
+  BIM7AATypeCode: string;
+  BIM7AATypeComments: string;
+};
+
 export const propertiesMetadata = async () => {
   let arr = [];
   const guid = new ForgeSDK.DerivativesApi();
@@ -73,8 +95,7 @@ export const propertiesMetadata = async () => {
 
   const hubs = await hub(credentials);
   const allProjects = await projects(hubs);
-  const dataBaseProject = await insertProjects(allProjects);
-  console.log(dataBaseProject);
+  await insertProjects(allProjects);
 
   for await (const property of arr) {
     //detailes from Item
@@ -86,16 +107,8 @@ export const propertiesMetadata = async () => {
     const elementsCount = property.hasTypeName.length as string;
     const date = property.itemMetaData.lastModifiedTime as string;
     const modiId = id.split('?')[0] as string;
-
-    const deleteId = await deleteObjId(modiId);
-    const insertItems = await insdertItems({
-      id,
-      projectId,
-      originalItemUrn,
-      name,
-      elementsCount,
-      date,
-    });
+    const version_id = id.split('=')[1];
+    Logger.debug(version_id);
 
     const eltCollection = property.hasTypeName.map((elt) => {
       const dbId = elt.name.split('[')[1].split(']')[0];
@@ -104,8 +117,9 @@ export const propertiesMetadata = async () => {
       return {
         name: elt.name,
         dbId: Number(dbId),
+        version_id: Number(version_id),
         externalId: elt['externalId'],
-        typName: elt.properties['Identity Data']['Type Name'],
+        TypeName: elt.properties['Identity Data']['Type Name'],
         objectId: property.itemMetaData.versionId,
         Workset: elt.properties['Identity Data']['Workset'],
         Type_Sorting: elt.properties['Identity Data']['Type Sorting'],
@@ -119,12 +133,20 @@ export const propertiesMetadata = async () => {
         BIM7AATypeCode: elt.properties['Other']['BIM7AATypeCode'],
         BIM7AATypeComments: elt.properties['Other']['BIM7AATypeComments'],
       };
-    });
+    }) as ElementProperties[];
 
-    const insterElt = await insterElements(eltCollection);
-    console.log(deleteId);
-    console.log(insertItems);
-    console.log(insterElt);
+    //calling the database
+    await deleteObjId(modiId);
+    await insdertItems({
+      id,
+      projectId,
+      originalItemUrn,
+      name,
+      elementsCount,
+      date,
+    });
+    await insterElements(eltCollection);
+    Logger.debug('*****************DONE*****************');
 
     await delay(10 * 1000);
   }
@@ -132,6 +154,5 @@ export const propertiesMetadata = async () => {
 
   return '*****************DONE*****************';
 };
-
 
 /**/

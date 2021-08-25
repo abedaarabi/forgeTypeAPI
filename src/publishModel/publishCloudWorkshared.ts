@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { publishModel } from 'src/SDKpublishModel/publishModel';
 import { items } from '../shared/forge.items';
 
@@ -13,10 +14,11 @@ export const publishCloudWorkshared = async () => {
     })
     .filter((item) => {
       if (
-        item.fileName.includes('K07') ||
-        item.fileName.includes('K08') ||
-        item.fileName.includes('K09') ||
-        item.fileName.includes('K10')
+        item.projectGuid &&
+        (item.fileName.includes('K07') ||
+          item.fileName.includes('K08') ||
+          item.fileName.includes('K09') ||
+          item.fileName.includes('K10'))
       ) {
         return true;
       } else return false;
@@ -29,11 +31,11 @@ export const publishCloudWorkshared = async () => {
       item.originalItemUrn,
       true, // true: orderPublishing  false: verifyPublishing
     );
-    console.log('initialize publisg: ', item.fileName);
+    Logger.debug('initialize publisg: ', item.fileName);
 
     arr.push(publishModels);
   }
-  console.log('##########Finish publishing order');
+  Logger.log('##########Finish publishing order');
 
   return arr;
 };
