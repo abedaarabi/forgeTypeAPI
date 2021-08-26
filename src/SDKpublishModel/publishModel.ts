@@ -19,7 +19,7 @@ export async function publishModel(
   if (!shouldPublish) {
     publishType = 'C4RModelGetPublishJob';
   } else {
-    publishType = '4RL5NPRJ3LNM';
+    publishType = 'C4RModelPublish';
   }
 
   const url = `https://developer.api.autodesk.com/data/v1/projects/${projectId}/commands`;
@@ -29,7 +29,7 @@ export async function publishModel(
     headers: {
       'content-type': 'application/vnd.api+json',
       Authorization: `Bearer ${credentials.access_token}`,
-      'x-user-id': 'G37HRH22DWBV',
+      'x-user-id': '4RL5NPRJ3LNM',
     },
     data: JSON.stringify({
       jsonapi: {
