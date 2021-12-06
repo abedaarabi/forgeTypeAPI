@@ -3,6 +3,7 @@ import { oAuth2 } from '../shared/forge.oAuth2';
 import { delay } from '../shared/array.helper';
 import { ItemDetails } from '../interfaces/interface.item';
 import { items } from '../shared/forge.items';
+import { Logger } from '@nestjs/common';
 
 let arr: ItemDetails[] = [];
 
@@ -29,7 +30,7 @@ export const metadata = async () => {
         );
 
         if (transalteProsses.body.progress != 'complete') {
-          console.log(
+          Logger.debug(
             'waitin for translation to finish: ',
             guidContent.fileName,
           );
@@ -45,7 +46,7 @@ export const metadata = async () => {
             null,
             credentials,
           );
-          console.log('Translate progress complete: ', guidContent.fileName);
+          Logger.log('Translate progress complete: ', guidContent.fileName);
           const uu = metaData.body.data.metadata as ItemDetails[];
           const roleInfo = uu.find((item) => {
             if (item.role === '3d' && item.name === 'New Construction') {
@@ -63,7 +64,7 @@ export const metadata = async () => {
           break;
         }
       } catch (error) {
-        console.log(error);
+        Logger.log(error);
       }
     }
   }

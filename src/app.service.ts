@@ -5,6 +5,7 @@ import { metadata } from './metaData/forge.derivative';
 import { publishCloudWorkshared } from './publishModel/publishCloudWorkshared';
 import { propertiesMetadata } from './metaData/retrieveItemMetaData';
 
+import { oAuth2 } from './shared/forge.oAuth2';
 @Injectable()
 export class AppService {
   async getHello(): Promise<any> {

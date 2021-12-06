@@ -32,7 +32,8 @@ export const projects = async (hubId) => {
 
   const neededProjects = [
     // 'b.12469613-6f90-42c3-b49c-4bb22e440e30',
-    'b.9789bc25-07fa-4fdc-9415-9951e8865d9d', //B313
+    // 'b.9789bc25-07fa-4fdc-9415-9951e8865d9d', //B313
+
     // 'b.a9a41e9c-3a75-4fca-bb88-acd926c7bbdc',
     // 'b.971c280a-ba24-4366-8b3c-25ef5cd82511',
 
@@ -41,6 +42,7 @@ export const projects = async (hubId) => {
     // 'b.5449d573-5229-45c1-832c-371769347b35',
     // 'b.5172f7a8-7376-4765-a871-ba3b8fcce946',
     // 'b.b85d407c-f4ed-41d1-b42a-2796292dbf0b',
+    'b.40365bf1-68ff-4782-91ed-9e8c404aa9c2',
   ];
   // 'b.79a6bff3-34b1-435f-8964-282f78ae1ef5', //*
 

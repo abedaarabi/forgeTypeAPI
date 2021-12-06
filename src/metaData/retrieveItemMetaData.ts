@@ -36,7 +36,7 @@ export type ElementProperties = {
 };
 
 export const propertiesMetadata = async () => {
-  await publishCloudWorkshared();
+  // await publishCloudWorkshared();
 
   let arr = [];
   const guid = new ForgeSDK.DerivativesApi();
@@ -148,6 +148,7 @@ export const propertiesMetadata = async () => {
       elementsCount,
       date,
     });
+
     await insterElements(eltCollection);
     Logger.debug('*****************DONE*****************');
 
