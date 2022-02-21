@@ -20,10 +20,10 @@ const dummyObject = {
   dbId: 'key not exist',
   version_id: 'key not exist',
   externalId: 'key not exist',
-  TypeName: 'key not exist',
+  'Type Name': 'key not exist',
   objectId: 'key not exist',
   Workset: 'key not exist',
-  Type_Sorting: 'key not exist',
+  'Type Sorting': 'key not exist',
   CCSTypeID: 'key not exist',
   CCSTypeID_Type: 'key not exist',
   CCSClassCode_Type: 'key not exist',
@@ -39,12 +39,13 @@ const topLevelObj = (obj) => {
   let item = {};
   for (const key in obj) {
     if (isObj(obj[key])) {
-      topLevelObj(obj[key]);
+      const result = topLevelObj(obj[key]);
 
-      item = { ...item, ...topLevelObj(obj[key]) };
+      item = { ...item, ...result };
     } else {
       if (Object.keys(dummyObject).includes(key)) {
         // item[key] = obj[key];
+
         item = { ...item, [key]: obj[key] };
       }
     }
@@ -149,24 +150,43 @@ export const propertiesMetadata = async () => {
     const date = property.itemMetaData.lastModifiedTime as string;
     const modiId = id.split('?')[0] as string;
     const version_id = Number(id.split('=')[1]);
-    Logger.debug(version_id);
 
     const eltCollection = property.hasTypeName.map((elt) => {
       const dbId = Number(elt.name.split('[')[1].split(']')[0]);
 
       // return elt;
+
+      const elementProps = topLevelObj(elt);
+
+      const typeName = elementProps?.['Type Name']
+        ? elementProps['Type Name']
+        : null;
+      const typeSorting = elementProps?.['Type Sorting']
+        ? elementProps['Type Sorting']
+        : null;
+      const objWithSpaces = {
+        TypeName: typeName,
+        Type_Sorting: typeSorting,
+      };
+
+      //@ts-ignore
       const objResult = {
         ...dummyObject,
         dbId,
         version_id,
-        ...topLevelObj(elt),
-      } as ElementProperties;
+        objectId: id,
 
+        ...elementProps,
+        ...objWithSpaces,
+      } as ElementProperties;
+      delete objResult['Type Name'];
+      delete objResult['Type Sorting'];
       return objResult;
     });
-
     //calling the database
+
     await deleteObjId(modiId);
+
     await insdertItems({
       id,
       projectId,
