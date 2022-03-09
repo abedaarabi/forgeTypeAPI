@@ -13,15 +13,27 @@ export const metadata = async () => {
   const allItems = await items();
 
   const filteredItems = allItems.filter((item) => {
-    if (item.fileType === 'rvt' && item.originalItemUrn) {
+    if (
+      item.fileType === 'rvt' &&
+      item.originalItemUrn &&
+      (item.fileName.includes('K07') ||
+        item.fileName.includes('K08') ||
+        item.fileName.includes('K09') ||
+        item.fileName.includes('K10'))
+    ) {
       return true;
+    } else {
+      return false;
     }
   });
+
+  console.log(filteredItems);
 
   for await (const guidContent of filteredItems) {
     while (true) {
       try {
         // check if the transalteProsses complete
+        // const credentials = await oAuth2();
         const transalteProsses = await guid.getManifest(
           guidContent.derivativesId,
           null,
@@ -29,15 +41,20 @@ export const metadata = async () => {
           credentials,
         );
 
-        if (transalteProsses.body.progress != 'complete') {
+        if (transalteProsses.body.progress !== 'complete') {
+          console.log(transalteProsses.body.progress, 'transalte status');
+
           Logger.debug(
             'waitin for translation to finish: ',
             guidContent.fileName,
           );
           await delay(10 * 1000);
+          //FIXED:
+
           continue;
         } else if (
           transalteProsses.body.progress === 'complete'
+
           // transalteProsses.body.status != 'failed'
         ) {
           const metaData = await guid.getMetadata(

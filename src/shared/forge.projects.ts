@@ -31,6 +31,7 @@ export const projects = async (hubId) => {
   const bim360Projects = allProjects.body.data as Projects;
 
   const neededProjects = [
+    'b.529f935c-64fb-4d03-b61f-584ce5ea18d9', //BA14
     'b.12469613-6f90-42c3-b49c-4bb22e440e30', //un17
     'b.9789bc25-07fa-4fdc-9415-9951e8865d9d', //B313
     'b.a9a41e9c-3a75-4fca-bb88-acd926c7bbdc',
