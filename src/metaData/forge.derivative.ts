@@ -6,10 +6,10 @@ import { items } from '../shared/forge.items';
 import { Logger } from '@nestjs/common';
 
 let arr: ItemDetails[] = [];
-
+const transaltionStatus = ['pending', 'inprogress'];
 export const metadata = async () => {
   const guid = new ForgeSDK.DerivativesApi();
-  const credentials = await oAuth2();
+  // const credentials = await oAuth2();
   const allItems = await items();
 
   const filteredItems = allItems.filter((item) => {
@@ -33,15 +33,16 @@ export const metadata = async () => {
     while (true) {
       try {
         // check if the transalteProsses complete
-        // const credentials = await oAuth2();
+        const credentials = await oAuth2();
+
         const transalteProsses = await guid.getManifest(
           guidContent.derivativesId,
           null,
           null,
           credentials,
         );
-
-        if (transalteProsses.body.progress !== 'complete') {
+        // if (transalteProsses.body.progress !== 'complete'
+        if (transaltionStatus.includes(transalteProsses.body.progress)) {
           console.log(transalteProsses.body.progress, 'transalte status');
 
           Logger.debug(
@@ -54,8 +55,7 @@ export const metadata = async () => {
           continue;
         } else if (
           transalteProsses.body.progress === 'complete'
-
-          // transalteProsses.body.status != 'failed'
+          // transalteProsses.body.progress === '99% complete transalte status'
         ) {
           const metaData = await guid.getMetadata(
             guidContent.derivativesId,
